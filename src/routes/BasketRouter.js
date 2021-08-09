@@ -1,5 +1,4 @@
 const express = require("express");
-const App = express();
 const router = express.Router();
 const idGenerator = require("../utils/IdGenerator");
 let basket = require("../utils/Basket");
@@ -14,34 +13,55 @@ router.get("/basket", (req, res) => {
 });
 
 router.get("/basket/:id", (req, res) => {
-  const id = req.params.id;
-  const product = basket.filter((product) => id == product.id);
-  product.length > 0 ? res.send(product) : res.status(204).send();
+  const id = Number(req.params.id);
+  const product = basket.find((product) => id === product.id);
+  if (product) {
+    res.json(product);
+  } else {
+    res.status(404).end();
+  }
 });
 
 router.post("/basket", (req, res) => {
   const data = req.body;
-  data.id = idGenerator();
-  basket.push(data);
-  res.send(basket);
+  if (!data.quantity) {
+    return res.status(400).json({
+      quantity: "Quantity is missing!",
+    });
+  }
+
+  const newData = {
+    id: idGenerator(),
+    name: data.name,
+    cost: data.cost, //Rupiah
+    quantity: data.quantity,
+    shortDescription: data.shortDescription,
+  };
+  basket.push(newData);
+  res.json(basket);
 });
 
 router.put("/basket/:id", (req, res) => {
-  const id = req.params.id;
-  const product = basket.filter((product) => id == product.id);
-  if (product.length == 0) {
-    res.status(204).send();
+  const id = Number(req.params.id);
+  const product = basket.find((product) => id === product.id);
+  if (product) {
+    product.quantity = 5;
+    res.json(product);
   } else {
-    basket[id - 1].size = "XL";
-    res.send(basket);
+    res.status(404).end();
   }
 });
 
 router.delete("/basket/:id", (req, res) => {
-  const id = req.params.id;
-  const product = basket.filter((product) => id == product.id);
-  basket = basket.filter((product) => product.id != id);
-  product.length > 0 ? res.send(basket) : res.status(204).send();
+  const id = Number(req.params.id);
+
+  const product = basket.find((product) => product.id === id);
+  if (product) {
+    basket = basket.filter((product) => product.id != id);
+    res.status(204).end();
+  } else {
+    res.status(404).end();
+  }
 });
 
 module.exports = router;

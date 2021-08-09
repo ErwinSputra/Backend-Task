@@ -11,7 +11,6 @@ const basket = [
     name: "T-shirt",
     cost: 500000, //Rupiah
     quantity: 3,
-    size: "L",
     shortDescription: "Short Desription about T-shirt",
   },
   {
