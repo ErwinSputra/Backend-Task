@@ -1,4 +1,4 @@
-const basket = [
+const basketData = [
   {
     id: 1,
     name: "Iphone X",
@@ -22,4 +22,4 @@ const basket = [
   },
 ];
 
-module.exports = basket;
+module.exports = basketData;
