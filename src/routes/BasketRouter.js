@@ -1,89 +1,99 @@
 const express = require("express");
 const router = express.Router();
-const mongoose = require("mongoose");
-// const idGenerator = require("../utils/IdGenerator");
-let basketData = require("../utils/BasketData");
-
-mongoose
-  .connect("mongodb://localhost:27017/basketDB", {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    useFindAndModify: false,
-  })
-  .then(console.log("Succesfully connected to DB.."))
-  .catch((err) => console.error(err));
-
-const basketSchema = mongoose.Schema({
-  name: String,
-  cost: Number, //Rupiah
-  quantity: Number,
-  shortDescription: String,
-});
-
-const basket = mongoose.model("basket", basketSchema);
+const { Basket, validate } = require("../models/Baskets");
 
 router.get("/", (req, res) => {
   res.send("Welcome to my Project :)");
 });
 
-router.get("/basket", (req, res) => {
-  basket.find({}, function (err, docs) {
-    if (err) console.log(err);
-    // console.log("Success get all data");
-    res.json(docs);
-  });
-});
-
-router.get("/basket/:id", (req, res) => {
-  const id = req.params.id;
-  basket.findById(id, function (err, doc) {
-    if (err) console.log(err);
-    if (!doc) res.status(404).end();
-    // console.log("Succes get the data");
-    res.json(doc);
-  });
-});
-
-router.post("/basket", (req, res) => {
-  const data = req.body;
-  if (!data.quantity) {
-    return res.status(400).json({
-      quantity: "Quantity is missing!",
+router.get("/basket", async (req, res) => {
+  try {
+    await Basket.find({}, function (err, docs) {
+      if (err) console.log(err);
+      res.json(docs);
     });
+  } catch (error) {
+    console.log(error);
   }
+});
 
-  const newBasket = new basket({
+router.get("/basket/:id", async (req, res) => {
+  const id = req.params.id;
+
+  try {
+    await Basket.findById(id, function (err, doc) {
+      if (err) {
+        console.log(err);
+        res.status(404).send("Id is not found!");
+      }
+      res.json(doc);
+    });
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+router.post("/basket", async (req, res) => {
+  const data = req.body;
+  const { error } = validate(req.body);
+  if (error) res.status(400).send(error.details[0]);
+
+  const newBasket = new Basket({
     name: data.name,
     cost: data.cost,
     quantity: data.quantity,
     shortDescription: data.shortDescription,
   });
 
-  newBasket.save();
-  res.json(newBasket);
+  try {
+    await newBasket.save().then((savedBasket) => {
+      res.json(savedBasket);
+    });
+  } catch (error) {
+    console.log(error);
+  }
 });
 
-router.put("/basket/:id", (req, res) => {
+router.put("/basket/:id", async (req, res) => {
+  const { error } = validate(req.body);
+  if (error) res.status(400).send(error.details[0]);
+
   const id = req.params.id;
-  basket.findByIdAndUpdate(id, { quantity: 5 }, function (err) {
-    if (err) {
-      console.log(err);
-      res.status(404).end();
-    }
-    res.send("Update success!");
-  });
+  const body = req.body;
+  // const updatedBasket = {
+  //   name: body.name,
+  //   cost: body.cost,
+  //   quantity: body.quantity,
+  //   shortDescription: body.shortDescription,
+  // };
+
+  try {
+    await Basket.findByIdAndUpdate(id, body, function (err) {
+      if (err) {
+        console.log(err);
+        res.status(404).end();
+      }
+      res.send("Update Success!");
+    });
+  } catch (error) {
+    console.log(error);
+  }
 });
 
-router.delete("/basket/:id", (req, res) => {
+router.delete("/basket/:id", async (req, res) => {
   const id = req.params.id;
 
-  basket.findByIdAndRemove(id, function (err) {
-    if (err) {
-      console.log(err);
-      res.status(404).end();
-    }
-    res.status(204).send("Delete Success!");
-  });
+  try {
+    await Basket.findByIdAndRemove(id, function (err) {
+      if (err) {
+        console.log(err);
+        res.status(404).end();
+      }
+      res.send("Delete Success!");
+    });
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 module.exports = router;

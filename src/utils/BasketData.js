@@ -9,7 +9,7 @@ const basketData = [
   {
     id: 2,
     name: "T-shirt",
-    cost: 500000, //Rupiah
+    cost: 500000,
     quantity: 3,
     shortDescription: "Short Desription about T-shirt",
   },
